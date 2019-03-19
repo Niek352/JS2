@@ -117,6 +117,7 @@ class GoodsList {
     });
     document.querySelector('.goods-list').innerHTML = listHtml;
     
+    
   }
   sum(){
   	return this.goods.reduce((totalPrice, good) => {  		
@@ -129,8 +130,10 @@ class GoodsList {
 	 
   }
   addSettings (){
-	
-	console.log(this)
+	this.goods.forEach((item) => {
+		let a = document.getElementById(item.id_product)
+		a.addEventListener('click', this.addToCart)
+	});
   }
 
   renderSum(){
@@ -142,7 +145,7 @@ class GoodsList {
 
 const list = new GoodsList();
 list.fetchGoods()
-setTimeout(list.addSettings,50)
+
 
 
 
