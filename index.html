@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
     <head>
       	<meta charset="utf-8">
@@ -18,9 +18,12 @@
                 <div class="goods-item" v-for="good in filteredGoods">
                     <h3>{{ good.product_name }}</h3>
                     <p>{{ good.price }}</p>
-                    <button  class="AddGoodsButton" type="button">Добавить</button>
+                    <button :id="good.id_product" @click="addToCart(good.id_product, good.product_name, good.price)" class="AddGoodsButton" type="button">Добавить</button>
                 </div>
-                <div class="fullCart"></div>
+                <div class="goodInCart" v-for="goods in cart">
+                    <h3>{{ goods.product_name }}</h3>
+                    <button class="deleteFromCart" @click="minus(goods.id_product)"> delete </button>                  
+                </div>
                 <h3 class="sum"></h3>
               <!-- <button id="removeCart" >Отчистить корзину</button> --> 
             </main>
