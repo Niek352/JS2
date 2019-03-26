@@ -6,15 +6,19 @@
     <title></title>
   </head>
   <body>
-    <header style="margin-bottom: 10px">
-      <button id="cart-button" type="button">Корзина <span id="numberOfGoods" ></span></button>
+    <header>
+        <button id="cart-button" type="button">Корзина <span id="numberOfGoods" ></span></button>
 
+        <div class="search">
+            <button class="search-button" type="button">Искать</button>
+            <input type="text" class="goods-search"/>
+        </div>
     </header>
-    <main style="">
-      <div class="goods-list"></div>
-      <div class="sum"></div>
-      <div class="fullCart" ></div>
-      <button id="removeCart" >Отчистить корзину</button>
+        <main style="">
+        <div class="goods-list"></div>
+        <div class="fullCart"></div>
+        <h3 class="sum"></h3>
+      <!-- <button id="removeCart" >Отчистить корзину</button> -->
     </main>
   </body>
 
@@ -52,8 +56,6 @@ function makeGETRequest(url) {
 }
 	
 
-
-
 class GoodsItem {
   constructor(title, price, id_product) {
   	this.id_product = id_product;
@@ -70,33 +72,36 @@ class GoodsItem {
       		`;  
 	}
    }
+
+
 class GoodsList {
   constructor() {
     this.goods = [];
+    this.filteredGoods = [];
   }
   fetchGoods() {
     makeGETRequest(`${API_URL}/catalogData.json`).then((goods) => {
-      this.goods = JSON.parse(goods);
-      this.render();
-      this.addSettings();
+        this.goods = JSON.parse(goods);
+        this.filteredGoods = JSON.parse(goods);
+        this.render();
+        var searchInput = d.querySelector('.goods-search');
+        var searchButton = d.querySelector('.search-button');
+        searchButton.addEventListener('click', (e) => {
+            const value = searchInput.value;
+            list.filterGoods(value);
+        });
+        this.addSettings();
       
     });
   }
   render(cb) {
     let listHtml = '';
-    this.goods.forEach(good => {
+    this.filteredGoods.forEach(good => {
         const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
         listHtml += goodItem.render();
     });
     d.querySelector('.goods-list').innerHTML = listHtml;
     this.enumerationForAllCart();
-  }
-
-  sum(){
-  	return this.goods.reduce((totalPrice, good) => {  		
-  		if (!good.price) return totalPrice
-  		return totalPrice += good.price
-  	},0);
   }
 
   enumerationForAllCart(){
@@ -108,34 +113,60 @@ class GoodsList {
   }
 
   addToCart(){
-    var idOfProductForCart = this.getAttribute("id");
-    cart[idOfProductForCart] = allListOfCart[idOfProductForCart];
-    console.log(cart[idOfProductForCart])
-
-    if (cart[idOfProductForCart].count == undefined) {
-      cart[idOfProductForCart].count = 1;
-    } else {
-      cart[idOfProductForCart].count++;
+    var idOfProductForCart = this.getAttribute("id"); 
+    if (cart[idOfProductForCart] == undefined) {
+        cart[idOfProductForCart] = allListOfCart[idOfProductForCart];
+    }   else {
+        let x = cart[idOfProductForCart].count;
+        cart[idOfProductForCart] = allListOfCart[idOfProductForCart];
+        cart[idOfProductForCart].count = x;
+        
     }
-
+    cart[idOfProductForCart].count = 1 + cart[idOfProductForCart].count;
+    
     localStorage.setItem('cart', JSON.stringify(cart));
     renderCart();
   };
   
-  addSettings (){
+    addSettings (){
   	d.getElementById("cart-button").addEventListener('click', showGoodsInCart);
-  	d.getElementById("removeCart").addEventListener('click', removeCart);
-	this.goods.forEach((item) => {
-		let a = d.getElementById(item.id_product)
-		a.addEventListener('click', this.addToCart)
+  	/*d.getElementById("removeCart").addEventListener('click', removeCart);*/
+	this.filteredGoods.forEach((item) => {
+		let a = d.getElementById(item.id_product);
+		a.addEventListener('click', this.addToCart);
 	});
+    
   };
 
-  renderSum(){
-  	let listResult = '';
-    listResult += `<h3>${this.sum()}</h3>`;
-    d.querySelector('.sum').innerHTML = listResult;
-  };
+    /* renderSum(){
+      	let listResult = '';
+        listResult += `<h3>${this.sum()}</h3>`;
+        d.querySelector('.sum').innerHTML = listResult;
+        };
+    */
+    filterGoods(value) {
+        const regexp = new RegExp(value, 'i');
+        this.filteredGoods = this.goods.filter(good => regexp.test(good.product_name));
+        this.render();
+        this.addSettings();
+    }
+};
+
+function sum(){
+    let i = d.querySelectorAll('.priceInCart'),b;
+    if(i[0] == undefined){
+        var q = '';
+    } else {
+        var q = 0;
+    }
+    for (b = 0 ; b < i.length; b++) {
+
+        var q = q + parseInt(i[b].innerHTML);     
+    }
+    d.querySelector('.sum').innerHTML = q;
+    /*   return x.reduce((totalPrice, good) => {        
+        return totalPrice.innerHTML += good.innerHTML
+    },0);*/
 };
 
 
@@ -148,10 +179,8 @@ function showGoodsInCart() {
     } 
 };
 function renderCart(){
-    var fullCart = d.querySelector('.fullCart');
-    
+    var fullCart = d.querySelector('.fullCart');   
     var out = '';
-
     for (let key in cart) {
         out += `<div class= "goodInCart">`
         out += `<h3 class= "prNameInCart">${cart[key].product_name}</h3>`
@@ -169,15 +198,17 @@ function renderCart(){
     }
 
     let minus = d.querySelectorAll('.deleteFromCart'),b;
-    for (b = 0 ; b < minus.length; b++) {
+    for (b = 0; b < minus.length; b++) {
         let q = minus[b];
         q.addEventListener('click', deleteFromCart);
     }
+    sum();
+    
 }
 function deleteFromCart () {
     var articule = this.getAttribute('dataminus')
     cart[articule].count--;
-    if (cart[articule].count == 0) {
+    if (cart[articule].count < 1) {
         delete cart[articule] 
     }
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -192,16 +223,17 @@ function addOneMoreToCart () {
 }
 
 	
-function removeCart(){
+/*function removeCart(){
 	cart = {};
 	localStorage.setItem('cart', JSON.stringify(cart));
-	d.querySelector('.fullCart').innerHTML = '';
-}
+    renderCart();
+    sum();
+}*/
 
 function CheckLocalStorage(){
     if (localStorage.getItem('cart') != null) {
     	cart = JSON.parse(localStorage.getItem('cart'));
-    	showGoodsInCart();
+    	renderCart();
     }
 };
 
@@ -210,41 +242,6 @@ list.fetchGoods()
 CheckLocalStorage();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*add() {
-  	this.goods.push(good);
-  	this.render();              FOR FOOD
-  }*/
-
- /* remove() {
-  	const goodIndex = this.goods.findIndex(item => item.title == good.title);
-  	this.goods.splice(goodIndex, 1);	
-  	this.render()				FOR FOOD
-  }*/
 </script>
 
 </html>
