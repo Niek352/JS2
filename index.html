@@ -1,249 +1,33 @@
-  <!DOCTYPE html>
-  <html>
-  <head>
-  	<meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <title></title>
-  </head>
-  <body>
-    <header>
-        <button id="cart-button" type="button">Корзина <span id="numberOfGoods" ></span></button>
-
-        <div class="search">
-            <button class="search-button" type="button">Искать</button>
-            <input type="text" class="goods-search"/>
+<!DOCTYPE html>
+<html>
+    <head>
+      	<meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <title></title>
+    </head>
+    <body>
+        <div id="app">
+            <header>
+                <button id="cart-button" type="button">Корзина <span id="numberOfGoods" ></span></button>
+                <div class="search">
+                    <button class="search-button" type="button" @click="filterGoods">Искать</button>
+                    <input type="text" class="goods-search" v-model="searchLine"/>
+                </div>
+            </header>
+            <main style="">
+                <div class="goods-item" v-for="good in filteredGoods">
+                    <h3>{{ good.product_name }}</h3>
+                    <p>{{ good.price }}</p>
+                    <button  class="AddGoodsButton" type="button">Добавить</button>
+                </div>
+                <div class="fullCart"></div>
+                <h3 class="sum"></h3>
+              <!-- <button id="removeCart" >Отчистить корзину</button> --> 
+            </main>
         </div>
-    </header>
-        <main style="">
-        <div class="goods-list"></div>
-        <div class="fullCart"></div>
-        <h3 class="sum"></h3>
-      <!-- <button id="removeCart" >Отчистить корзину</button> -->
-    </main>
-  </body>
-
-<script type="text/javascript">
-d = document;
-const API_URL = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
-var cart = {};
-var allListOfCart = {};
-
-
-
-function makeGETRequest(url) {
-	var xhr;
-	if (window.XMLHttpRequest) {
-	    xhr = new XMLHttpRequest();
-	} else if (window.ActiveXObject) { 
-	    xhr = new ActiveXObject("Microsoft.XMLHTTP");
-  	}
-
-  	xhr.open('GET', url, true);
-  	xhr.send();
-
-  	return	new	Promise((resolve, reject) => {
-		xhr.onreadystatechange = function () {
-		   	if (xhr.readyState === 4){
-		    	if (xhr.status === 200) {
-		    		resolve(xhr.responseText);
-		    	} else {
-		    		reject(console.error())
-		    	}
-		    }		 
-		}
-	});
-
-}
-	
-
-class GoodsItem {
-  constructor(title, price, id_product) {
-  	this.id_product = id_product;
-    this.product_name = title;
-    this.price = price;
-    
-  }
-  render() {
-    return `<div class="goods-item" >
-		        <h3>${this.product_name || 'Товар  отсутствует' }</h3>
-		      	<p> ${this.price || 0}</p>
-		      	<button  id="${this.id_product}" class="AddGoodsButton" type="button">Добавить</button>      	
-      		</div>
-      		`;  
-	}
-   }
-
-
-class GoodsList {
-  constructor() {
-    this.goods = [];
-    this.filteredGoods = [];
-  }
-  fetchGoods() {
-    makeGETRequest(`${API_URL}/catalogData.json`).then((goods) => {
-        this.goods = JSON.parse(goods);
-        this.filteredGoods = JSON.parse(goods);
-        this.render();
-        var searchInput = d.querySelector('.goods-search');
-        var searchButton = d.querySelector('.search-button');
-        searchButton.addEventListener('click', (e) => {
-            const value = searchInput.value;
-            list.filterGoods(value);
-        });
-        this.addSettings();
-      
-    });
-  }
-  render(cb) {
-    let listHtml = '';
-    this.filteredGoods.forEach(good => {
-        const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
-        listHtml += goodItem.render();
-    });
-    d.querySelector('.goods-list').innerHTML = listHtml;
-    this.enumerationForAllCart();
-  }
-
-  enumerationForAllCart(){
-  	this.goods.forEach(function(item){
-		var id_product = item.id_product;
-		allListOfCart[id_product] = item;
-        allListOfCart[id_product].count = 0;	
-	})
-  }
-
-  addToCart(){
-    var idOfProductForCart = this.getAttribute("id"); 
-    if (cart[idOfProductForCart] == undefined) {
-        cart[idOfProductForCart] = allListOfCart[idOfProductForCart];
-    }   else {
-        let x = cart[idOfProductForCart].count;
-        cart[idOfProductForCart] = allListOfCart[idOfProductForCart];
-        cart[idOfProductForCart].count = x;
-        
-    }
-    cart[idOfProductForCart].count = 1 + cart[idOfProductForCart].count;
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    renderCart();
-  };
-  
-    addSettings (){
-  	d.getElementById("cart-button").addEventListener('click', showGoodsInCart);
-  	/*d.getElementById("removeCart").addEventListener('click', removeCart);*/
-	this.filteredGoods.forEach((item) => {
-		let a = d.getElementById(item.id_product);
-		a.addEventListener('click', this.addToCart);
-	});
-    
-  };
-
-    /* renderSum(){
-      	let listResult = '';
-        listResult += `<h3>${this.sum()}</h3>`;
-        d.querySelector('.sum').innerHTML = listResult;
-        };
-    */
-    filterGoods(value) {
-        const regexp = new RegExp(value, 'i');
-        this.filteredGoods = this.goods.filter(good => regexp.test(good.product_name));
-        this.render();
-        this.addSettings();
-    }
-};
-
-function sum(){
-    let i = d.querySelectorAll('.priceInCart'),b;
-    if(i[0] == undefined){
-        var q = '';
-    } else {
-        var q = 0;
-    }
-    for (b = 0 ; b < i.length; b++) {
-
-        var q = q + parseInt(i[b].innerHTML);     
-    }
-    d.querySelector('.sum').innerHTML = q;
-    /*   return x.reduce((totalPrice, good) => {        
-        return totalPrice.innerHTML += good.innerHTML
-    },0);*/
-};
-
-
-
-function showGoodsInCart() {
-    if (d.querySelector('.fullCart').innerHTML == '') {		
-        renderCart()
-    }  else {
-      d.querySelector('.fullCart').innerHTML = '';
-    } 
-};
-function renderCart(){
-    var fullCart = d.querySelector('.fullCart');   
-    var out = '';
-    for (let key in cart) {
-        out += `<div class= "goodInCart">`
-        out += `<h3 class= "prNameInCart">${cart[key].product_name}</h3>`
-        out += `<p class= "priceInCart">${cart[key].price * cart[key].count}</p>`
-        out += `<button class="deleteFromCart" dataminus=${cart[key].id_product}> delete </button>`
-        out += `<p class="countInCart">${cart[key].count}</p>`
-        out += `<button class="addOneMoreToCart" data=${cart[key].id_product}> add </button>`
-        out += `</div>`
-    }
-    fullCart.innerHTML = out;
-    let a = d.querySelectorAll('.addOneMoreToCart'),i;
-    for (i = 0 ; i < a.length; i++) {
-        let x = a[i];
-        x.addEventListener('click', addOneMoreToCart);
-    }
-
-    let minus = d.querySelectorAll('.deleteFromCart'),b;
-    for (b = 0; b < minus.length; b++) {
-        let q = minus[b];
-        q.addEventListener('click', deleteFromCart);
-    }
-    sum();
-    
-}
-function deleteFromCart () {
-    var articule = this.getAttribute('dataminus')
-    cart[articule].count--;
-    if (cart[articule].count < 1) {
-        delete cart[articule] 
-    }
-    localStorage.setItem('cart', JSON.stringify(cart));
-    renderCart()
-}
-
-function addOneMoreToCart () {
-    var articule = this.getAttribute('data')
-    cart[articule].count++;
-    localStorage.setItem('cart', JSON.stringify(cart));
-    renderCart()
-}
-
-	
-/*function removeCart(){
-	cart = {};
-	localStorage.setItem('cart', JSON.stringify(cart));
-    renderCart();
-    sum();
-}*/
-
-function CheckLocalStorage(){
-    if (localStorage.getItem('cart') != null) {
-    	cart = JSON.parse(localStorage.getItem('cart'));
-    	renderCart();
-    }
-};
-
-const list = new GoodsList();
-list.fetchGoods()
-CheckLocalStorage();
-
-
-</script>
-
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+        <script src="script.js"></script>
+    </body>
 </html>
 
 
