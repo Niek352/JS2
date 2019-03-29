@@ -1,0 +1,34 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+      	<meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <title></title>
+    </head>
+    <body>
+        <div id="app">
+            <header>
+                <button id="cart-button" type="button" @click="showCart">Корзина</button>
+                <search @search="filterGoods"></search>
+            </header>
+
+            <main>
+                <good-list :goods="filteredGoods"></good-list>
+                <!-- <div class="goods-item" v-for="good in filteredGoods">
+                    <h3>{{ good.product_name }}</h3>
+                    <p>{{ good.price }}</p>
+                    <button :id="good.id_product" @click="addToCart(good.id_product, good.product_name, good.price)" class="AddGoodsButton" type="button">Добавить</button>
+                </div> -->
+                <cart v-if="isVisibleCart" :cart="cart">
+                </cart>
+                <h3 class="sum"></h3>
+                <button id="removeCart" @click="deleteAllFromCart">Отчистить корзину</button>
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+        <script src="script.js"></script>
+    </body>
+</html>
+
+
+
