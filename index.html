@@ -1,186 +1,32 @@
-  <!DOCTYPE html>
-  <html>
-  <head>
-  	<meta charset="utf-8">
-  	<style type="text/css"> 
-	  	@import url('https://fonts.googleapis.com/css?family=Montserrat:200,300,400|Raleway:400,500,600,700');
+<!DOCTYPE html> 
+<html>
+    <head>
+      	<meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <title></title>
+    </head>
+    <body>
+        <div id="app">
+            <header>
+                <button id="cart-button" type="button" @click="showCart">Корзина</button>
+                <search @search="filterGoods"></search>
+            </header>
 
-		* {
-		font-family: Montserrat, sans-serif;
-		}
-		.cart-button {
-			padding: 10px 15px;
-			font-size: 16px;
-			background-color:white; 
-		}
-		.AddGoodsButton {
-			padding:5px;
-			background-color:white;
-		}
-		.cart-button:active, .AddGoodsButton:active  {
-			background-color:#e6e6e6;
-		}
-		.goods-item {
-			width: 152px;
-			font-size: 14px;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-		.AddGoodsButton {
-			margin-bottom: 10px;
-		}
-		.goods-item {
-			margin: 20px;
-			padding: 10px;
-			border: 1px solid gray;
-		}
-	</style>
-    <title></title>
-  </head>
-  <body>
-    <header style="text-align: center; margin-bottom: 10px">
-      <button class="cart-button" type="button" >Корзина</button>
-    </header>
-    <main>
-      <div class="goods-list" style="display: flex; justify-content: space-around; border:1px solid gray"></div>
-      <div class="sum" style="text-align: center;"></div>
-    </main>
-  </body>
-
-<script type="text/javascript">
-const API_URL = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
-
-
-
-
-function makeGETRequest(url) {
-	var xhr;
-	if (window.XMLHttpRequest) {
-	    xhr = new XMLHttpRequest();
-	} else if (window.ActiveXObject) { 
-	    xhr = new ActiveXObject("Microsoft.XMLHTTP");
-  	}
-
-  	xhr.open('GET', url, true);
-  	xhr.send();
-
-  	return	new	Promise((resolve, reject) => {
-		xhr.onreadystatechange = function () {
-		   	if (xhr.readyState === 4){
-		    	if (xhr.status === 200) {
-		    		resolve(xhr.responseText);
-		    	} else {
-		    		reject(console.error())
-		    	}
-		    }		
-		}
-	});
-
-}
-	
-
-
-
-class GoodsItem {
-  constructor(title, price, id_product) {
-  	this.id_product = id_product;
-    this.product_name = title;
-    this.price = price;
-    
-  }
-  render() {
-    return `<div class="goods-item">
-		        <h3>${this.product_name || 'Товар  отсутствует' }</h3>
-		      	<p> ${this.price || 0}</p>
-		      	<button  id="${this.id_product}" class="AddGoodsButton" type="button">Добавить</button>
-      		</div>
-      		`;  
-	}
-   }
-class GoodsList {
-  constructor() {
-    this.goods = [];
-  }
-  fetchGoods() {
-    makeGETRequest(`${API_URL}/catalogData.json`).then((goods) => {
-      this.goods = JSON.parse(goods);
-      this.render(this.renderSum());
-      this.addSettings();
-    });
-  }
-  render(cb) {
-    let listHtml = '';
-    this.goods.forEach(good => {
-        const goodItem = new GoodsItem(good.product_name, good.price, good.id_product);
-        listHtml += goodItem.render();
-    });
-    document.querySelector('.goods-list').innerHTML = listHtml;
-    
-  }
-  sum(){
-  	return this.goods.reduce((totalPrice, good) => {  		
-  		if (!good.price) return totalPrice
-  		return totalPrice += good.price
-  	},0);
-  }
-
-  addToCart(){
-	 
-  }
-  addSettings (){
-	
-	console.log(this)
-  }
-
-  renderSum(){
-  	let listResult = '';
-    listResult += `<h3>${this.sum()}</h3>`;
-    document.querySelector('.sum').innerHTML = listResult;
-  };
-}
-
-const list = new GoodsList();
-list.fetchGoods()
-setTimeout(list.addSettings,50)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*add() {
-  	this.goods.push(good);
-  	this.render();              FOR FOOD
-  }*/
-
- /* remove() {
-  	const goodIndex = this.goods.findIndex(item => item.title == good.title);
-  	this.goods.splice(goodIndex, 1);	
-  	this.render()				FOR FOOD
-  }*/
-</script>
-
+            <main>
+                <good-list :goods="filteredGoods" :func="addToCart"></good-list>
+                <!-- <div class="goods-item" v-for="good in filteredGoods">
+                    <h3>{{ good.product_name }}</h3>
+                    <p>{{ good.price }}</p>
+                    <button :id="good.id_product" @click="addToCart(good.id_product, good.product_name, good.price)" class="AddGoodsButton" type="button">Добавить</button>
+                </div> -->
+                <cart v-if="isVisibleCart" :cart="cart" @minus="minusToCart" @plus="plusToCart"></cart>
+                <h3 class="sum"></h3>
+                <button id="removeCart" @click="deleteAllFromCart">Отчистить корзину</button>
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+        <script src="script.js"></script>
+    </body>
 </html>
 
 
